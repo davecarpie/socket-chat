@@ -18,9 +18,12 @@
   <script>
     $(function () {
       var socket = io();
+      console.log('new connetion')
       $('form').submit(function(){
-        socket.emit('chat message', $('#m').val());
+        var text = $('#m').val() 
+        $('#messages').append($('<li>').text(text));
         $('#m').val('');
+        socket.emit('chat message', text);
         return false;
       });
       socket.on('chat message', function(msg){
