@@ -6,14 +6,28 @@ app.get('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
 })
 
-io.on('connection', function(socket) {
-    console.log('a user connected');
-    socket.broadcast.emit('user connected')
+var nicks = {}
 
-    socket.on('chat message', function(msg) {
-        console.log(msg);
-        socket.broadcast.emit('chat message', msg)
+io.on('connection', function(socket) {
+
+    socket.on('joined', (name) =>
+    {
+        nicks[socket.id] = name
+        socket.broadcast.emit('user connected', name)    
     })
+
+    socket.on('msg', function(msg) {
+        var nick = nicks[socket.id]
+        var data = { "sender" : nick, "text" : msg}
+        socket.broadcast.emit('msg', data)
+    })
+
+    socket.on('nick', function(name) {
+        let previousNick = nicks[socket.id]
+        nicks[socket.id] = name
+        var msg = { "sender" : null, "text" : previousNick + " changed their name to " + name }
+        socket.broadcast.emit('msg', msg)
+    });
 
     socket.on('disconnect', function() {
         console.log('user disconnected');

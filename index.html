@@ -18,21 +18,66 @@
   <script>
     $(function () {
       var socket = io();
+      var nick;
+
+      var newNick = function() {
+        poss = "abcdef0123456789"
+        randChars = [0,0,0,0,0,0,0].map(() => poss.charAt(Math.floor(Math.random() * poss.length)) ).join("")
+        return "User" + randChars
+      }
+
+      var writeToMsgList = (text) => {
+        $('#messages').append($('<li>').text(text));
+      }
+
+      // when you have connected tell the server who you are
+      socket.on('connect', () => {
+        writeToMsgList("You joined the channel")
+        nick = newNick()
+        socket.emit('joined', nick)
+      })
+
+      // when you change your name, tell the server your new name
+      var changeNick = (newNick) => {
+        var msg = "You changed your name to " + newNick
+        nick = newNick
+        writeToMsgList(msg)
+        socket.emit('nick', newNick)
+      }
+
+      // when you send a message, send the contents to the server
+      var sendMessage = (text) => {
+        var msg = nick + ": " + text
+        writeToMsgList(msg)
+        socket.emit('msg', text)
+      }  
+
+      // when you receive a chat message, join its sender and body and add it to the list
+      socket.on('msg', (data) => {
+        if (data.sender) {
+          msg = data.sender + ": " + data.text
+        } else {
+          msg = data.text 
+        }
+        writeToMsgList(msg)
+      })
+
       console.log('new connetion')
       $('form').submit(function(){
         var text = $('#m').val() 
-        $('#messages').append($('<li>').text(text));
+        if (text.startsWith("/nick ")) {
+          changeNick(text.substring(6))
+        } else {
+          sendMessage(text)
+        }
         $('#m').val('');
-        socket.emit('chat message', text);
         return false;
       });
-      socket.on('chat message', function(msg){
-        $('#messages').append($('<li>').text(msg));
-      });
 
-      socket.on('user connected', function() {
-        $('#messages').append($('<li>').text("a user connected"));
+      socket.on('user connected', function(name) {
+        writeToMsgList(name + " joined the channel");
       })
+
     });
   </script>
   <body>
