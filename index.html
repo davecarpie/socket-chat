@@ -20,13 +20,10 @@
       var socket = io();
       var nick;
 
-      var getNick = function() {
-        if (nick) { return nick }
-        else {
-          possible = "abcdef0123456789"
-          randChars = [0,0,0,0,0,0,0].map(() => poss.charAt(Math.floor(Math.random() * poss.length)) ).join("")
-          return "User" + randChars
-        }
+      var newNick = function() {
+        poss = "abcdef0123456789"
+        randChars = [0,0,0,0,0,0,0].map(() => poss.charAt(Math.floor(Math.random() * poss.length)) ).join("")
+        return "User" + randChars
       }
 
       var writeToMsgList = (text) => {
@@ -36,21 +33,23 @@
       // when you have connected tell the server who you are
       socket.on('connect', () => {
         writeToMsgList("You joined the channel")
-        socket.emit('joined', getNick())
+        nick = newNick()
+        socket.emit('joined', nick)
       })
 
       // when you change your name, tell the server your new name
       var changeNick = (newNick) => {
         var msg = "You changed your name to " + newNick
+        nick = newNick
         writeToMsgList(msg)
-        io.emit('nick', newNick)
+        socket.emit('nick', newNick)
       }
 
       // when you send a message, send the contents to the server
       var sendMessage = (text) => {
-        var msg = getNick() + ": " + text
+        var msg = nick + ": " + text
         writeToMsgList(msg)
-        io.emit('msg', msg)
+        socket.emit('msg', text)
       }  
 
       // when you receive a chat message, join its sender and body and add it to the list

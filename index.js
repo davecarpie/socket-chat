@@ -17,7 +17,7 @@ io.on('connection', function(socket) {
     })
 
     socket.on('msg', function(msg) {
-        var nick = getNick(socket.id)
+        var nick = nicks[socket.id]
         var data = { "sender" : nick, "text" : msg}
         socket.broadcast.emit('msg', data)
     })
@@ -25,8 +25,8 @@ io.on('connection', function(socket) {
     socket.on('nick', function(name) {
         let previousNick = nicks[socket.id]
         nicks[socket.id] = name
-        var msg = { "sender" : null, "text" : previousNick + " changed their name to " + data }
-        io.emit('msge', msg)
+        var msg = { "sender" : null, "text" : previousNick + " changed their name to " + name }
+        socket.broadcast.emit('msg', msg)
     });
 
     socket.on('disconnect', function() {
