@@ -18,16 +18,30 @@
   <script>
     $(function () {
       var socket = io();
+      var sId = socket.id
+      var nick = sId.substring(sId.length - 5)
       console.log('new connetion')
       $('form').submit(function(){
         var text = $('#m').val() 
-        $('#messages').append($('<li>').text(text));
+
+        if (text.startsWith("/nick ")) {
+          nick = text.substring(6)
+          socket.emit('nick', nick);
+        } else {
+          $('#messages').append($('<li>').text(nick + ": " + text));
+          socket.emit('chat message', text);
+        }
         $('#m').val('');
-        socket.emit('chat message', text);
         return false;
       });
       socket.on('chat message', function(msg){
-        $('#messages').append($('<li>').text(msg));
+        var msgBody;
+        if (msg.sender) {
+          msgBody = msg.sender + ": " + msg.text
+        } else {
+          msgBody = msg.msg
+        }
+        $('#messages').append($('<li>').text(msgBody));
       });
 
       socket.on('user connected', function() {
