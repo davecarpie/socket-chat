@@ -8,33 +8,25 @@ app.get('/', function(req, res) {
 
 var nicks = {}
 
-let getNick = function(id) {
-    if (nicks.id) {
-        return nicks.id
-    } else {
-        return (id.substring(id.length - 5));
-    }
-}
-
 io.on('connection', function(socket) {
-    console.log('a user connected');
-    socket.broadcast.emit('user connected')
 
-    socket.on('chat message', function(msg) {
-        console.log(msg);
-        var nick = getNick(socket.id)
-        var data = { "sender" : nick, "msg" : msg}
-        socket.broadcast.emit('chat message', data)
+    socket.on('joined', (name) =>
+    {
+        nicks[socket.id] = name
+        socket.broadcast.emit('user connected', name)    
     })
 
-    
+    socket.on('msg', function(msg) {
+        var nick = getNick(socket.id)
+        var data = { "sender" : nick, "text" : msg}
+        socket.broadcast.emit('msg', data)
+    })
 
-    socket.on('nick', function(data) {
-        console.log("new nick" + data)
-        let previousNick = getNick(socket.id)
-        nicks[socket.id] = data
-        var msg = { "sender" : null, "msg" : previousNick + " changed their name to " + data }
-        io.emit('chat message', msg)
+    socket.on('nick', function(name) {
+        let previousNick = nicks[socket.id]
+        nicks[socket.id] = name
+        var msg = { "sender" : null, "text" : previousNick + " changed their name to " + data }
+        io.emit('msge', msg)
     });
 
     socket.on('disconnect', function() {
