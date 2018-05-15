@@ -62,7 +62,31 @@
         writeToMsgList(msg)
       })
 
-      console.log('new connetion')
+      socket.on('typists', function(typists) {
+        // todo fill in
+      })
+
+      var typingTimer;
+
+      var stopTypingTimer = function() {
+        clearTimeout(typingTimer)
+        console.log('no longer typing')
+      }
+      
+      var startTypingTimer = function() {
+        console.log('yeah we are typing')
+        clearTimeout(typingTimer)
+        typingTimer = setTimeout(function() { console.log("done typing")}, 3000);
+      }
+
+      $('#m').on('input', function() {
+        if ($('#m').val() === '') {
+          stopTypingTimer()
+        } else {
+          startTypingTimer()
+        }
+      })
+
       $('form').submit(function(){
         var text = $('#m').val() 
         if (text.startsWith("/nick ")) {
@@ -70,6 +94,7 @@
         } else {
           sendMessage(text)
         }
+        clearTimeout(typingTimer);
         $('#m').val('');
         return false;
       });
